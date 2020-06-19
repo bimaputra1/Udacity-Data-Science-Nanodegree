@@ -1,12 +1,91 @@
 import sys
 
+# import basic libraries
+import pandas as pd
+import numpy as np
+import pickle
+from sqlalchemy import create_engine
+import warnings
+warnings.filterwarnings("ignore")
+
+# import NLP Library
+import re
+import nltk 
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem.wordnet import WordNetLemmatizer
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet') # download for lemmatization
+
+# import sklearn
+from sklearn.pipeline import Pipeline
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+
 
 def load_data(database_filepath):
-    pass
+    '''
+    Function:
+        Load data from the sqlite database. 
+    Args: 
+        database_filepath: the path of the database file
+    Returns: 
+        X (DataFrame): messages 
+        Y (DataFrame): One-hot encoded categories
+        category_names (List)
+    '''
+    
+    # load data from database
+    engine = create_engine('sqlite:///../data/DisasterResponse.db')
+    df = pd.read_sql_table('DisasterResponse', engine)
+    X = df['message']
+    Y = df.drop(['id', 'message', 'original', 'genre'], axis=1)
+    category_names = Y.columns
+    
+    return X, Y, category_names
 
 
 def tokenize(text):
-    pass
+    '''
+    Functions:
+        Tokenize the message into word level. 
+            1. replace urls
+            2. convert to lower cases
+            3. remove stopwords
+            4. strip white spaces
+    Args: 
+        text: input text messages
+    Returns: 
+        cleaned_tokens(List)
+    
+    '''
+    
+    # Define url pattern
+    url_re = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\), ]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+    
+    # Detect and replace urls
+    detected_urls = re.findall(url_re, text)
+    for url in detected_urls:
+        text = text.replace(url, "urlplaceholder")
+    
+    # tokenize sentences
+    tokens = word_tokenize(text)
+    
+    # lematizer sentences
+    lemmatizer = WordNetLemmatizer()
+    
+    # save cleaned tokens
+    clean_tokens = [lemmatizer.lemmatize(tok).lower().strip() for tok in tokens]
+    
+    # remove stopwords
+    STOPWORDS = list(set(stopwords.words('english')))
+    clean_tokens = [token for token in clean_tokens if token not in STOPWORDS]
+    
+    return clean_tokens
 
 
 def build_model():
