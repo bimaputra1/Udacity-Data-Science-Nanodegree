@@ -40,7 +40,7 @@ def load_data(database_filepath):
     '''
     
     # load data from database
-    engine = create_engine('sqlite:///../data/DisasterResponse.db')
+    engine = create_engine('sqlite:///'+ database_filepath)
     df = pd.read_sql_table('DisasterResponse', engine)
     X = df['message']
     Y = df.drop(['id', 'message', 'original', 'genre'], axis=1)
@@ -154,7 +154,7 @@ def save_model(model, model_filepath):
         model: model file
         model_filepath: model save location
      '''
-    joblib.dump(model, open(model_filepath, 'wb'))
+     joblib.dump(model,open(model_filepath,'wb'))
 
 
 def main():

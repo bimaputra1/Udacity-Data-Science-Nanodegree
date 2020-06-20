@@ -26,11 +26,11 @@ def tokenize(text):
     return clean_tokens
 
 # load data
-engine = create_engine('sqlite:///../data/YourDatabaseName.db')
-df = pd.read_sql_table('YourTableName', engine)
+engine = create_engine('sqlite:///../data/DisasterResponse.db')
+df = pd.read_sql_table('DisasterResponse', engine)
 
 # load model
-model = joblib.load("../models/your_model_name.pkl")
+model = joblib.load("../models/classifier.pkl")
 
 
 # index webpage displays cool visuals and receives user input text for model
@@ -42,6 +42,16 @@ def index():
     # TODO: Below is an example - modify to extract data for your own visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
+    
+    # Get most appearing categories
+    category_names = list(df.iloc[:, 3:].sum().sort_values(ascending=False).index)
+    category_counts = list(df.iloc[:, 3:].sum().sort_values(ascending=False).values)
+    
+    # Get top 10 tokens             
+    sorted_d = joblib.load("sorted_d.pkl")
+    
+    token_names = [x[0] for x in sorted_d[-10:]]
+    token_counts = [x[1] for x in sorted_d[-10:]]
     
     # create visuals
     # TODO: Below is an example - modify to create your own visuals
@@ -63,7 +73,46 @@ def index():
                     'title': "Genre"
                 }
             }
+        },
+        
+        {
+            'data': [
+                Bar(
+                    x=category_names,
+                    y=category_counts
+                )
+            ],
+
+            'layout': {
+                'title': 'Distribution of Message Categories',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Category"
+                }
+            }
+        },
+       
+        {
+            'data': [
+                Bar(
+                    x=token_names,
+                    y=token_counts
+                )
+            ],
+
+            'layout': {
+                'title': 'Top 10 Tokens',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Tokens"
+                }
+            }
         }
+        
     ]
     
     # encode plotly graphs in JSON

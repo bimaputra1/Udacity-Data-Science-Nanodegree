@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as n
 from sqlalchemy import create_engine
 
+
 def load_data(messages_filepath, categories_filepath):
     '''
     Functions: 
@@ -22,7 +23,7 @@ def load_data(messages_filepath, categories_filepath):
     # merge two dataframes into one
     df = pd.merge(messages, categories, on = 'id')
     
-    return merged_df
+    return df
 
 def clean_data(df):
     '''
@@ -58,22 +59,22 @@ def clean_data(df):
     # drop duplicates
     df = df.drop_duplicates()
     
-    return cleaned_df
+    return df
 
 
-def save_data(df, database_filename):
+def save_data(df, database_filepath):
     '''
     Functions: 
        Save processed data to sqlite database
        
     Args:
         df: DataFrame after preprocessed
-        database_filename: database names
+        database_filepath: database location
         
     Returns: 
         None
     '''
-    engine = create_engine('sqlite:///DisasterResponse.db')
+    engine = create_engine('sqlite:///' + database_filepath)
     df.to_sql('DisasterResponse', engine, index=False)
     
 
