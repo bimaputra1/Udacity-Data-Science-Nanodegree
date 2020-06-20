@@ -89,15 +89,72 @@ def tokenize(text):
 
 
 def build_model():
-    pass
+    '''
+    Function:
+      1. Create NLP pipeline 
+            - count words
+            - tf-idf
+            - multiple output classifier
+      2. grid search the best parameters
+    Args: 
+        None
+    Returns: 
+        cross validated classifier object
+    '''
+    
+    # Create a pipeline
+    pipeline = Pipeline([
+        ('vec', CountVectorizer(tokenizer=tokenize)),
+        ('tfidf', TfidfTransformer()),
+        ('clf', MultiOutputClassifier(RandomForestClassifier(n_estimators = 100)))
+    ])
+    
+    # grid search
+    parameters = {'clf__estimator__max_features':['sqrt', 0.5],
+              'clf__estimator__n_estimators':[50, 100]}
+
+    cv = GridSearchCV(estimator=pipeline, param_grid = parameters, cv = 5, n_jobs = 10)
+   
+    return cv
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
-    pass
+    '''
+    Function:
+        Evaluate the model performances by calculating f1-score, precison and recall
+    Args: 
+        model: the model to be evaluated
+        X_test: X_test dataframe
+        Y_test: Y_test dataframe
+        category_names: category names list defined in load data
+    Returns: 
+        perfomances (DataFrame)
+    '''   
+    # predict on the X_test
+    y_pred = model.predict(X_test)
+    
+    # build classification report on every column
+    performances = []
+    for i in range(len(category_names)):
+        performances.append([f1_score(Y_test.iloc[:, i].values, y_pred[:, i], average='micro'),
+                             precision_score(Y_test.iloc[:, i].values, y_pred[:, i], average='micro'),
+                             recall_score(Y_test.iloc[:, i].values, y_pred[:, i], average='micro')])
+    # build dataframe
+    performances = pd.DataFrame(performances, columns=['f1 score', 'precision', 'recall'],
+                                index = category_names)   
+    
+    return performances
 
 
 def save_model(model, model_filepath):
-    pass
+     '''
+     Function:
+        Save model to pickle
+     Args:
+        model: model file
+        model_filepath: model save location
+     '''
+    joblib.dump(model, open(model_filepath, 'wb'))
 
 
 def main():
